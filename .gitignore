@@ -41,3 +41,4 @@
 *.dwo
 
 cmake-build-debug/
+.idea/
