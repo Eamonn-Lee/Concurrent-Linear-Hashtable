@@ -39,7 +39,7 @@ private:
     mutable std::shared_mutex global_mutex;
 
     size_t hash2bucket(const K& key) const;
-    bool should_split() const;
+    bool split_cond() const;
 
 public:
     //===== WARNING: Iterators are not thread safe! =====
@@ -157,7 +157,7 @@ size_t LinearHash<K, V>::hash2bucket(const K& key) const {
 }
 
 template <typename K, typename V>
-bool LinearHash<K, V>::should_split() const {
+bool LinearHash<K, V>::split_cond() const {
     if (table.empty()) {
         return false;
     }
@@ -168,6 +168,7 @@ bool LinearHash<K, V>::should_split() const {
 
 template <typename K, typename V>
 void LinearHash<K, V>::insert(const K& key, const V& val) {
+    auto should_split = false;   //carries check result out of lock scope
     {   // scope lock
         std::shared_lock<std::shared_mutex> global_read(global_mutex);
         const size_t i = hash2bucket(key); //Only one function call
@@ -184,12 +185,13 @@ void LinearHash<K, V>::insert(const K& key, const V& val) {
 
     bucket.entries.push_back(Entry{key, val});
     ++num_elem;
+    should_split = split_cond();
     }
 
-    if (should_split()) {
+    if (should_split) {
         std::unique_lock<std::shared_mutex> global_write(global_mutex);
 
-        if (!should_split()) {return;}  //check for split while thread waiting
+        if (!split_cond()) {return;}  //check for split while thread waiting
 
         table.push_back(std::make_unique<Bucket>());
         auto& original = *table.at(split_ptr);

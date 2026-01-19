@@ -39,8 +39,6 @@ else()
     message(STATUS "AddressSanitizer DISABLED (ThreadSanitizer Running?)")
 endif()
 
-
-
 # add the testing library Catch2
 enable_testing()
 add_library(catch2_main lib/catch2_main.cpp)
