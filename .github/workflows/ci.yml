@@ -11,20 +11,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # checkout repo
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      # prep cmake
-      # use RelWithDebInfo -> ASan/UBSan in CMakeLists.txt
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    # cache setup
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ github.job }}-${{ runner.os }}
 
-      # build
-      - name: Build
-        run: cmake --build build --config RelWithDebInfo
+    - name: Configure CMake
+      # run cached g++
+      run: cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
-      # run Tests
-      # --output-on-failure for error messages
-      - name: Test
-        working-directory: build
-        run: ctest -C RelWithDebInfo --output-on-failure
+    - name: Build
+      run: cmake --build build --config RelWithDebInfo
+
+    - name: Test
+      working-directory: build
+      run: ctest -C RelWithDebInfo --output-on-failure
+
+  thread-safety-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ github.job }}-${{ runner.os }}-tsan
+
+    - name: Configure CMake (TSan)
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=thread" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Test for Race Conditions
+      working-directory: build
+      run: ctest --output-on-failure
