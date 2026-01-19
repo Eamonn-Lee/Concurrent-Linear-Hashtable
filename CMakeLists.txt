@@ -28,20 +28,22 @@ add_compile_options(
 
 # debug builds should be compiled with sanitizers
 # sanitizers are small libraries that check things like buffer overrun with minimal runtime overhead.
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-fsanitize=address,undefined")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-fsanitize=address,undefined")
-set(CMAKE_CXX_EXE_LINKER_FLAGS_DEBUG_INIT "-fsanitize=address,undefined")
-set(CMAKE_CXX_EXE_LINKER_FLAGS_RELWITHDEBINFO_INIT "-fsanitize=address,undefined")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fsanitize=address,undefined -fno-omit-frame-pointer")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address,undefined")
+set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} -fsanitize=address,undefined")
 
 # add the testing library Catch2
 enable_testing()
 add_library(catch2_main lib/catch2_main.cpp)
 target_include_directories(catch2_main PUBLIC lib)
 # link the library so that other programs can get it
-link_libraries(catch2_main)
 
-add_executable(MVCC_Linear_hashtable src/linear_hash.h)
+# Changed to a library because header files cannot be executables
+add_library(MVCC_Linear_hashtable INTERFACE)
+target_include_directories(MVCC_Linear_hashtable INTERFACE src)
 
 # link testing
 add_executable(linear_hash_test_exe src/linear_hash.test.cpp)
+target_link_libraries(linear_hash_test_exe PRIVATE MVCC_Linear_hashtable catch2_main)
 add_test(linear_hash_test linear_hash_test_exe)
