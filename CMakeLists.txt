@@ -36,7 +36,8 @@ set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBIN
 # add the testing library Catch2
 enable_testing()
 add_library(catch2_main lib/catch2_main.cpp)
-target_include_directories(catch2_main PUBLIC lib)
+target_include_directories(catch2_main SYSTEM PUBLIC lib)
+target_compile_options(catch2_main PRIVATE -w)
 # link the library so that other programs can get it
 
 # Changed to a library because header files cannot be executables
