@@ -28,10 +28,18 @@ add_compile_options(
 
 # debug builds should be compiled with sanitizers
 # sanitizers are small libraries that check things like buffer overrun with minimal runtime overhead.
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -fno-omit-frame-pointer")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fsanitize=address,undefined -fno-omit-frame-pointer")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address,undefined")
-set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} -fsanitize=address,undefined")
+option(ENABLE_ASAN "Enable AddressSanitizer (Disable for ThreadSanitizer)" ON)
+if(ENABLE_ASAN) # Santize only if not running ThreadSanitizer
+    message(STATUS "AddressSanitizer ENABLED")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fsanitize=address,undefined -fno-omit-frame-pointer")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address,undefined")
+    set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} -fsanitize=address,undefined")
+else()
+    message(STATUS "AddressSanitizer DISABLED (ThreadSanitizer Running?)")
+endif()
+
+
 
 # add the testing library Catch2
 enable_testing()

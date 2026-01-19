@@ -41,7 +41,14 @@ jobs:
         key: ${{ github.job }}-${{ runner.os }}-tsan
 
     - name: Configure CMake (TSan)
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=thread" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      # turn OFF the default ASan, manually add TSan flags
+      run: >
+        cmake -B build 
+        -DCMAKE_BUILD_TYPE=Debug 
+        -DENABLE_ASAN=OFF 
+        -DCMAKE_CXX_FLAGS="-fsanitize=thread" 
+        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread" 
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build build
